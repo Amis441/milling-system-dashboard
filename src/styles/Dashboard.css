@@ -1,0 +1,44 @@
+.dashboard {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+
+.left-section {
+  width: 35%;
+  padding: 10px;
+}
+
+.right-section {
+  width: 65%;
+  padding: 10px;
+}
+
+.progress-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.metric-card {
+  margin-bottom: 20px;
+}
+
+.metric-data {
+  text-align: center;
+}
+
+.forces-grid {
+  display: flex;
+  justify-content: space-around;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.full-width {
+  width: 100%;
+}
