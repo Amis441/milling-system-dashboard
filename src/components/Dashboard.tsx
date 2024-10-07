@@ -46,10 +46,18 @@ const Dashboard: React.FC = () => {
   const [forceX, setForceX] = useState<number>(0);
   const [forceY, setForceY] = useState<number>(0);
   const [forceZ, setForceZ] = useState<number>(0);
-  const [totalForce, setTotalForce] = useState<number | math.Complex>(0);
+  // const [totalForce, setTotalForce] = useState<number | math.Complex>(0);
+  const [torque, setTotalForce] = useState<number | math.Complex>(0);
 
   useEffect(() => {
-    let time = 0;
+    let time = parseFloat(
+      Number(
+        forceData.length - 1
+          ? forceData[forceData.length - 1] &&
+              forceData[forceData.length - 1].time
+          : 0
+      ).toFixed(2)
+    );
     const interval = setInterval(() => {
       // Slightly vary iMax and frequency for dynamic behavior
       const newIMax = iMax + (math.random() - 0.5) * 2; // Vary by ±1A
@@ -75,18 +83,21 @@ const Dashboard: React.FC = () => {
       const newForceX =
         80 + (newMeanCurrent / 20) * 40 + (math.random() - 0.5) * 10;
       const newForceY =
-        80 + (newMeanCurrent / 20) * 40 + (math.random() - 0.5) * 10;
-      const newForceZ =
-        80 + (newMeanCurrent / 20) * 40 + (math.random() - 0.5) * 10;
+        100 + (newMeanCurrent / 20) * 40 + (math.random() - 0.5) * 10;
+      // const newForceZ =
+      //   80 + (newMeanCurrent / 20) * 40 + (math.random() - 0.5) * 10;
       setForceX(newForceX);
       setForceY(newForceY);
-      setForceZ(newForceZ);
+      // setForceZ(newForceZ);
 
       // Calculate total force using vector formula
-      const newTotalForce = math.sqrt(
-        newForceX ** 2 + newForceY ** 2 + newForceZ ** 2
-      );
-      setTotalForce(newTotalForce);
+      const torque = 25 * meanCurrent;
+
+      setTotalForce(torque);
+      // const newTotalForce = math.sqrt(
+      //   newForceX ** 2 + newForceY ** 2 + newForceZ ** 2
+      // );
+      // setTotalForce(newTotalForce);
 
       // Add new force data point
       setForceData((prevData: any) => {
@@ -96,22 +107,19 @@ const Dashboard: React.FC = () => {
             time,
             x: newForceX,
             y: newForceY,
-            z: newForceZ,
-            total: newTotalForce,
+            // z: newForceZ,
+            total: torque, // You can still store total if needed elsewhere
           },
         ];
       });
 
-      const totalForceData = forceData.map((some) => some.total);
+      const forceXData = forceData.map((some) => some.x); // Extract forceX (newForceX)
 
       // Pad data to the next power of 2
-      const paddedLength = Math.pow(
-        2,
-        Math.ceil(Math.log2(totalForceData.length))
-      );
+      const paddedLength = Math.pow(2, Math.ceil(Math.log2(forceXData.length)));
       const paddedData = [
-        ...totalForceData,
-        ...new Array(paddedLength - totalForceData.length).fill(0),
+        ...forceXData,
+        ...new Array(paddedLength - forceXData.length).fill(0),
       ];
 
       // Initialize FFT
@@ -147,7 +155,7 @@ const Dashboard: React.FC = () => {
       // Set the FFT result to state or use the data
       setFFTData(fftResult);
       time += 0.1; // Increment time by 0.1 seconds
-    }, 2000); // Update every 100ms for smoother animation
+    }, 1000); // Update every 100ms for smoother animation
 
     return () => clearInterval(interval);
   }, [iMax, frequency]);
@@ -196,16 +204,16 @@ const Dashboard: React.FC = () => {
             />
           </div>
           <div className="metric-card metric-data">
-            <h2>Total Force</h2>
+            <h2>Torque</h2>
             <CircularProgressbar
               styles={{
                 text: {
                   fontSize: "14px", // Change this value to whatever size you want
                 },
               }}
-              value={totalForce}
-              maxValue={300}
-              text={`${totalForce.toFixed(2)} N`}
+              value={torque}
+              maxValue={1000}
+              text={`${torque.toFixed(2)} Nm`}
             />
           </div>
         </div>
@@ -224,10 +232,10 @@ const Dashboard: React.FC = () => {
                 <p>Y: {forceY.toFixed(2)} N</p>
                 <progress value={forceY} max={150} />
               </div>
-              <div>
+              {/* <div>
                 <p>Z: {forceZ.toFixed(2)} N</p>
                 <progress value={forceZ} max={150} />
-              </div>
+              </div> */}
             </div>
           </div>
           <div className="metric-card">
@@ -241,14 +249,31 @@ const Dashboard: React.FC = () => {
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={forceData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" />
-              <YAxis domain={[0, 300]} />
+
+              {/* X-Axis with time label */}
+              <XAxis
+                dataKey="time"
+                label={{ value: "Time(s)", position: "insideBottom", offset: -5 }}
+              />
+
+              {/* Y-Axis with Newton label */}
+              <YAxis
+                domain={[0, 300]}
+                label={{
+                  value: "Force (N)",
+                  angle: -90,
+                  position: "insideLeft",
+                }}
+              />
+
               <Tooltip />
               <Legend />
+
+              {/* Lines for force data */}
               <Line type="monotone" dataKey="x" stroke="#8884d8" />
               <Line type="monotone" dataKey="y" stroke="#82ca9d" />
-              <Line type="monotone" dataKey="z" stroke="#ffc658" />
-              <Line type="monotone" dataKey="total" stroke="#ff7300" />
+              {/* <Line type="monotone" dataKey="z" stroke="#ffc658" /> */}
+              {/* <Line type="monotone" dataKey="total" stroke="#ff7300" /> */}
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -257,8 +282,18 @@ const Dashboard: React.FC = () => {
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={fftData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="frequency" />
-              <YAxis />
+              <XAxis
+                dataKey="frequency"
+                label={{ value: "frequency (Hz)", position: "insideBottom", offset: -5 }}
+              />
+              <YAxis
+                domain={[0, 300]}
+                label={{
+                  value: "Force (N)",
+                  angle: -90,
+                  position: "insideLeft",
+                }}
+              />
               <Tooltip />
               <Legend />
               <Line type="monotone" dataKey="magnitude" stroke="#8884d8" />
