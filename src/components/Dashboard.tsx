@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -9,7 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
+import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import * as math from "mathjs";
 import FFT from "fft.js";
@@ -18,22 +18,10 @@ import "../styles/Dashboard.css";
 const VOLTAGE = 220; // Constant voltage in Volts
 const K1 = 150; // Constant for spindle speed calculation
 
-const generateCurrentData = (
-  length: number,
-  iMax: number,
-  frequency: number
-) => {
-  return Array.from({ length }, (_, i) => {
-    const time = i / 100; // 100 points per second for smooth curve
-    const value = iMax * math.sin(2 * math.pi * frequency * time);
-    return { time, value };
-  });
-};
-
 const Dashboard: React.FC = () => {
-  const [currentData, setCurrentData] = useState<
-    { time: number; value: number }[]
-  >([]);
+  // const [currentData, setCurrentData] = useState<
+  //   { time: number; value: number }[]
+  // >([]);
   const [forceData, setForceData] = useState<
     { time: number; x: number; y: number; z: number; total: number }[]
   >([]);
@@ -45,7 +33,6 @@ const Dashboard: React.FC = () => {
   const [speed, setSpeed] = useState<number>(0);
   const [forceX, setForceX] = useState<number>(0);
   const [forceY, setForceY] = useState<number>(0);
-  const [forceZ, setForceZ] = useState<number>(0);
   // const [totalForce, setTotalForce] = useState<number | math.Complex>(0);
   const [torque, setTotalForce] = useState<number | math.Complex>(0);
 
@@ -64,11 +51,6 @@ const Dashboard: React.FC = () => {
       const newFrequency = frequency + (math.random() - 0.5) * 0.2; // Vary by ±0.1Hz
       setIMax(newIMax);
       setFrequency(newFrequency);
-
-      const newData = generateCurrentData(100, newIMax, newFrequency);
-      setCurrentData((prevData) =>
-        [...prevData.slice(-900), ...newData].slice(-1000)
-      ); // Keep last 1000 points
 
       const newMeanCurrent = newIMax / Number(math.sqrt(2));
       setMeanCurrent(newMeanCurrent);
@@ -211,9 +193,9 @@ const Dashboard: React.FC = () => {
                   fontSize: "14px", // Change this value to whatever size you want
                 },
               }}
-              value={torque}
+              value={Number(torque)}
               maxValue={1000}
-              text={`${torque.toFixed(2)} Nm`}
+              text={`${(torque as number).toFixed(2)} Nm`}
             />
           </div>
         </div>
@@ -253,7 +235,11 @@ const Dashboard: React.FC = () => {
               {/* X-Axis with time label */}
               <XAxis
                 dataKey="time"
-                label={{ value: "Time(s)", position: "insideBottom", offset: -5 }}
+                label={{
+                  value: "Time(s)",
+                  position: "insideBottom",
+                  offset: -5,
+                }}
               />
 
               {/* Y-Axis with Newton label */}
@@ -284,7 +270,11 @@ const Dashboard: React.FC = () => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="frequency"
-                label={{ value: "frequency (Hz)", position: "insideBottom", offset: -5 }}
+                label={{
+                  value: "frequency (Hz)",
+                  position: "insideBottom",
+                  offset: -5,
+                }}
               />
               <YAxis
                 domain={[0, 300]}
